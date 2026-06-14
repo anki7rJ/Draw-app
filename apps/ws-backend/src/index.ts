@@ -61,7 +61,7 @@ wss.on('connection',(ws,request)=>{
             const roomId= Number(parsedData.roomId)
             const message = parsedData.message
         
-            await prisma.chat.create({
+            await prisma.shape.create({
                 data:{
                     roomId,
                     message,
