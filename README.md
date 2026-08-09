@@ -1,120 +1,87 @@
 # 🎨 Draw App
 
-A real-time collaborative drawing application inspired by Excalidraw, where multiple users can join a room and draw together instantly.
+A collaborative drawing app inspired by Excalidraw — jump into a room with friends or teammates and sketch together on a shared canvas, live.
 
-## 🚀 Features
+## 🚀 What it does
 
-- 🔐 User Authentication (Signup/Login)
-- 🍪 JWT Authentication using HTTP-only Cookies
-- 🏠 Create and Join Drawing Rooms
-- ✏️ Real-time Collaborative Drawing
-- ⚡ WebSocket-based communication
-- 🎯 Canvas-based drawing interface
-- 📱 Responsive UI built with Next.js and Tailwind CSS
-
----
+- **Auth that works** — sign up, log in, and stay logged in with JWT stored in HTTP-only cookies (no messing around with localStorage tokens)
+- **Rooms** — spin up a new drawing room or join an existing one
+- **Live drawing** — every stroke shows up on everyone else's screen instantly, powered by WebSockets
+- **Canvas-based editor** — built on the HTML5 Canvas API for smooth, responsive drawing
+- **Clean, responsive UI** — built with Next.js and Tailwind, works well on different screen sizes
 
 ## 🛠️ Tech Stack
 
-### Frontend
+**Frontend**
 - Next.js
 - TypeScript
 - Tailwind CSS
 - Axios
 - HTML5 Canvas API
 
-### Backend
-- Node.js
-- Express.js
+**Backend**
+- Node.js + Express
 - WebSocket (`ws`)
 - Prisma ORM
 - PostgreSQL
-- JWT Authentication
-- Cookie Parser
+- JWT Auth + Cookie Parser
 
----
+## 🏗️ How it's put together
 
-## 📂 Project Structure
+There are two separate flows happening under the hood:
 
+**Regular HTTP traffic** (auth, room creation, etc.) goes through the Express backend, which talks to PostgreSQL via Prisma.
 
+```
+Client → HTTP → Express Backend → PostgreSQL
+```
 
+**Drawing events** go over a WebSocket connection. Once you're in a room, every stroke you draw gets broadcast to everyone else connected to that same room.
 
+```
+Client → WebSocket → WS Server → broadcasts to other clients in the room
+```
 
----
+## 🔄 How a session plays out
 
-## 🏗️ Architecture
+1. You sign up or log in
+2. A JWT gets issued and stored in an HTTP-only cookie
+3. You create a room or join one that already exists
+4. The frontend opens a WebSocket connection for that room
+5. You start drawing — every stroke fires off as an event
+6. The server broadcasts it to everyone else in the room
+7. Everyone sees your drawing appear on their screen, live
 
+## 📸 What you can try out
 
-Client
-   |
-   | HTTP Request (Authentication, Room APIs)
-   ↓
-HTTP Backend (Express)
-   |
-   | Stores Data
-   ↓
-PostgreSQL
+- Creating a room
+- Joining an existing one
+- Drawing shapes on the canvas
+- Watching changes sync in real time across multiple users in the same room
 
-Client
-   |
-   | WebSocket Connection
-   ↓
-WS Backend
-   |
-   | Broadcast Drawing Events
-   ↓
-Other Connected Clients
+## 🔮 What's next
 
+There's plenty of room to grow this into something more full-featured:
 
-
-## 🔄 Application Flow
-
-1. User signs up or logs in.
-2. JWT token is stored in an HTTP-only cookie.
-3. User creates or joins a room.
-4. Frontend establishes a WebSocket connection.
-5. User sends drawing events.
-6. WebSocket server broadcasts events to all users in the room.
-7. Every connected user sees the drawing in real time.
-
----
-
-## 📸 Features Demo
-
-- Create Room
-- Join Existing Room
-- Draw Shapes
-- Real-time Collaboration
-- Multiple Users in Same Room
-
----
-
-## 🔮 Future Improvements
-
-- Undo / Redo
-- Shape Selection and Resizing
-- Eraser Tool
-- Different Colors and Stroke Sizes
-- Save Canvas to Database
-- Export as PNG/PDF
-- Cursor Presence Indicators
-- Redis Pub/Sub for Horizontal Scaling
-
----
-
-
+- Undo / redo
+- Selecting and resizing shapes
+- An eraser tool
+- More colors and stroke width options
+- Saving canvases to the database so they persist
+- Exporting as PNG or PDF
+- Live cursor presence, so you can see where others are pointing
+- Redis pub/sub, to scale WebSocket broadcasting across multiple servers
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-
+MIT — do what you want with it.
 
 ## 👨‍💻 Author
 
 **Ankit Raj**
+- GitHub: [AnkitRaj05](https://github.com/AnkitRaj05)
+- LinkedIn: [ankitraj-cse](https://www.linkedin.com/in/ankitraj-cse)
 
-- GitHub: https://github.com/AnkitRaj05
-- LinkedIn: https://www.linkedin.com/in/ankitraj-cse
+---
 
-⭐ If you liked this project, consider giving it a star!
+If this project's useful to you, a star on GitHub goes a long way ⭐
