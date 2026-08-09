@@ -61,9 +61,8 @@ export const chats = async (req:Request,res:Response,next:NextFunction)=>{
                 roomId:roomId
             },
             orderBy:{
-                id:"desc"
-            },
-            take:50
+                id:"asc"
+            }
         })
 
         res.json({

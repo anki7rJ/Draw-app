@@ -5,16 +5,18 @@ import {JWT_SECRET }from '@repo/backend-common/config'
 
 export function authMiddleware(req:Request, res:Response, next:NextFunction){
     try {
-        console.log("cookie header:", req.headers.cookie)
-        console.log("cookies object:", req.cookies)
-        const token = req.cookies.token
+        const authorization = req.get("authorization")
+        const bearerToken = authorization?.startsWith("Bearer ")
+            ? authorization.slice("Bearer ".length)
+            : undefined
+        const token = req.cookies.token || bearerToken
         if(!token){
             return res.status(401).json({
                 status:false,
                 message:"user in not authorized"
             })
         }
-        const userVerification = jwt.verify(token!,JWT_SECRET!) as CustomUserPayload
+        const userVerification = jwt.verify(token,JWT_SECRET!) as CustomUserPayload
 
         if(!userVerification){
             return res.status(401).json({

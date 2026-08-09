@@ -11,7 +11,7 @@ const wss = new WebSocketServer({ port})
 interface User{
     ws:WebSocket,
     userId:string,
-    rooms:number[]
+    rooms:Set<number>
 }
 
 const users:User[] = []
@@ -44,22 +44,41 @@ wss.on('connection',(ws,request)=>{
 
     users.push({
         userId,
-        rooms:[],
+        rooms:new Set(),
         ws
     })
 
     ws.on('message',async(data)=>{
-        
-        const parsedData = JSON.parse(data.toString())
+        let parsedData: { type?: string; roomId?: unknown; message?: unknown }
+        try {
+            parsedData = JSON.parse(data.toString())
+        } catch {
+            ws.close(1008, "Invalid message")
+            return
+        }
         
         if(parsedData.type === "join_room"){
+            const roomId = Number(parsedData.roomId)
+            if (!Number.isInteger(roomId)) {
+                ws.close(1008, "Invalid room")
+                return
+            }
             const user = users.find(x=>x.ws===ws)
-            user?.rooms.push(Number(parsedData.roomId))
+            user?.rooms.add(roomId)
         }
 
         if(parsedData.type==="chat"){
             const roomId= Number(parsedData.roomId)
             const message = parsedData.message
+            if (!Number.isInteger(roomId) || typeof message !== "string") {
+                ws.close(1008, "Invalid message")
+                return
+            }
+            const sender = users.find(user => user.ws === ws)
+            if (!sender?.rooms.has(roomId)) {
+                ws.close(1008, "Join the room before sending messages")
+                return
+            }
         
             await prisma.shape.create({
                 data:{
@@ -71,7 +90,7 @@ wss.on('connection',(ws,request)=>{
             
 
             users.forEach(user=>{
-                if(user.rooms.includes(roomId)){
+                if(user.rooms.has(roomId) && user.ws.readyState === WebSocket.OPEN){
                     user.ws.send(JSON.stringify({
                         type:"chat",
                         message:message,
@@ -80,6 +99,10 @@ wss.on('connection',(ws,request)=>{
                 }
             })
         }
+    })
+    ws.on("close", () => {
+        const index = users.findIndex(user => user.ws === ws)
+        if (index !== -1) users.splice(index, 1)
     })
         
     } catch (error) {

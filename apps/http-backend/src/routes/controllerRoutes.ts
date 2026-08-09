@@ -5,7 +5,7 @@ import { authMiddleware } from "../middleware/middleware";
 const controllerRouter:express.Router = express.Router();
 
 controllerRouter.post("/room", authMiddleware, room);
-controllerRouter.get("/chats/:roomId", chats);
+controllerRouter.get("/chats/:roomId", authMiddleware, chats);
 controllerRouter.get("/room/:slug",authMiddleware,getRoomBySlug)
 
 export default controllerRouter;

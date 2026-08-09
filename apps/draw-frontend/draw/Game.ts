@@ -36,6 +36,8 @@ export class Game{
     private startY:number=0
     private selectedTool:Tool ="circle"
     private currentPoints:{x:number,y:number}[]=[]
+    private initialShapesLoaded = false
+    private pendingShapes:Shape[] = []
 
 
 
@@ -47,8 +49,8 @@ export class Game{
         this.socket = socket
         this.clicked = false
         
-        this.init()
         this.initHandlers()
+        this.init()
         this.initMouseHandlers()
     }
     destroy(){
@@ -63,8 +65,19 @@ export class Game{
 
 
     async init(){
-        this.existingShapes = await getExistingShapes(this.roomId)
-        this.clearCanvas()
+        try {
+            const shapes = await getExistingShapes(this.roomId)
+            this.existingShapes = [...shapes, ...this.pendingShapes]
+            this.pendingShapes = []
+            this.initialShapesLoaded = true
+            this.clearCanvas()
+        } catch (error) {
+            console.error("Unable to load existing shapes", error)
+            this.initialShapesLoaded = true
+            this.existingShapes = this.pendingShapes
+            this.pendingShapes = []
+            this.clearCanvas()
+        }
 
 
     }
@@ -74,9 +87,18 @@ export class Game{
                 const message = JSON.parse(event.data)
 
                 if(message.type=="chat"){
-                    const parsedShape = JSON.parse(message.message)
-                    this.existingShapes.push(parsedShape)
-                    this.clearCanvas()
+                    let parsedShape: Shape
+                    try {
+                        parsedShape = JSON.parse(message.message)
+                    } catch {
+                        return
+                    }
+                    if (this.initialShapesLoaded) {
+                        this.existingShapes.push(parsedShape)
+                        this.clearCanvas()
+                    } else {
+                        this.pendingShapes.push(parsedShape)
+                    }
                 }
 
 
@@ -168,9 +190,9 @@ export class Game{
         if(!shape){
             return
         }
-        this.existingShapes.push(shape)
-        
-        
+        if (this.socket.readyState !== WebSocket.OPEN) {
+            return
+        }
         this.socket.send(JSON.stringify({
             type:"chat",
             roomId:Number(this.roomId),
